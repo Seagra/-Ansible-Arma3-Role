@@ -1,0 +1,7 @@
+---
+# vars file for arma
+armaPath: "/opt/games/arma/"
+steamCMDPath: "/opt/steam/"
+steamUser: "anonymous"
+steamPassword: ""
+CFGURL: "https://github.com/Seagra/ARMA-Config.git"

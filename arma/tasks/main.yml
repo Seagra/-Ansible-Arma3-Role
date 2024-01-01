@@ -1,0 +1,65 @@
+---
+# tasks file for arma
+
+- name: Check if git is installed
+  ansible.builtin.apt:
+    name: git
+    state: present
+
+
+- name: Create Arma-User to run our server safely
+  ansible.builtin.user:
+    name: arma
+    group: arma
+    create_home: yes
+    home: /home/arma
+    system: yes
+
+
+- name: Create Path for Arma-Server
+  ansible.builtin.file:
+    path: "{{ armaPath }}"
+    state: directory
+
+    
+- name: Install Arma
+  ansible.builtin.shell: "{{ steamCMDPath }}/./steamcmd.sh +force_install_dir {{ armaPath }} +login {{ steamUser }} {{ steamPassword }} +app_update 233780 -beta=profiling validate +quit"
+
+
+- name: Check if server.cfg is already exists
+  ansible.builtin.stat:
+    path: "{{ armaPath }}/server.cfg"
+  register: config_exists
+
+
+- name: Checkout empty server.cfg
+  ansible.builtin.git:
+    repo: "{{ CFGURL }}"
+    dest: "/root/serverconfig/"
+    clone: yes
+    update: yes
+  when: not config_exists.stat.exists
+
+
+- name: Copy empty server.cfg to server directory
+  ansible.builtin.copy:
+    src: /root/serverconfig/server.cfg
+    dest: "{{ armaPath }}"
+  when: not config_exists.stat.exists
+
+
+- name: Cleanup for Repository
+  ansible.builtin.file:
+    path: /root/serverconfig
+    state: absent
+  when: not config_exists.stat.exists
+
+
+- name: Change ownership and set correct permissions for user arma
+  ansible.builtin.file:
+    path: "{{ armaPath }}"
+    recurse: yes
+    owner: arma
+    group: arma
+    mode: u+rwx,g+rwx,o-rwx
+
